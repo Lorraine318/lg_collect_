@@ -41,4 +41,7 @@
             </plugin>
         </plugins>
     </build>
+    <modules>
+        <module>flink</module>
+    </modules>
 </project>
