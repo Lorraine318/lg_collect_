@@ -11,6 +11,7 @@
 
     <artifactId>flink</artifactId>
 
+
     <properties>
         <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -19,6 +20,7 @@
         <scala.version>2.12</scala.version>
         <hadoop.version>3.1.3</hadoop.version>
     </properties>
+
 
 
     <dependencies>
@@ -136,5 +138,6 @@
             </plugin>
         </plugins>
     </build>
+
 
 </project>
