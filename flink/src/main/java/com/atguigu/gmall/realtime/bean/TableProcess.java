@@ -28,4 +28,61 @@ public class TableProcess {
         String sinkPK;
         //建表扩展
         String sinkExtend;
+
+
+        public String getSourceTable() {
+                return sourceTable;
+        }
+
+        public void setSourceTable(String sourceTable) {
+                this.sourceTable = sourceTable;
+        }
+
+        public String getOperateType() {
+                return operateType;
+        }
+
+        public void setOperateType(String operateType) {
+                this.operateType = operateType;
+        }
+
+        public String getSinkTable() {
+                return sinkTable;
+        }
+
+        public void setSinkTable(String sinkTable) {
+                this.sinkTable = sinkTable;
+        }
+
+        public String getSingType() {
+                return singType;
+        }
+
+        public void setSingType(String singType) {
+                this.singType = singType;
+        }
+
+        public String getSinkColumns() {
+                return sinkColumns;
+        }
+
+        public void setSinkColumns(String sinkColumns) {
+                this.sinkColumns = sinkColumns;
+        }
+
+        public String getSinkPK() {
+                return sinkPK;
+        }
+
+        public void setSinkPK(String sinkPK) {
+                this.sinkPK = sinkPK;
+        }
+
+        public String getSinkExtend() {
+                return sinkExtend;
+        }
+
+        public void setSinkExtend(String sinkExtend) {
+                this.sinkExtend = sinkExtend;
+        }
 }
