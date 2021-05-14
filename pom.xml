@@ -44,6 +44,7 @@
     <modules>
         <module>flink</module>
         <module>spark</module>
+        <module>java</module>
     </modules>
 
 </project>
