@@ -55,7 +55,59 @@ public class TableProcessFunction  extends ProcessFunction<JSONObject, JSONObjec
     }
     //每条元素执行一次,进行分流处理，主要根据内存中配置表map对当前进来的元素进行分流
     @Override
-    public void processElement(JSONObject jsonObject, Context context, Collector<JSONObject> collector) throws Exception {
+    public void processElement(JSONObject jsonObject, Context context, Collector<JSONObject> out) throws Exception {
+                //获取表名
+        String table = jsonObject.getString("table");
+        //获取操作类型
+        String type = jsonObject.getString("type");
+        //获取表名和操作类型拼接key
+        String key = table + ":" + type;
+
+        //todo 问题修复 如果 使用maxwell的bootstrap同步历史数据，这个时候它的类型是bootstrap-insert
+        if("bootstrap-insert".equals(type)){
+            type = "insert";
+            jsonObject.put("type",type);
+        }
+        //从内存的配置map中获取当前key的配置信息
+        final TableProcess tableProcess = tableProcessMap.get(key);
+
+        //如果获取到了该元素对应的配置信息
+        if(tableProcess != null){
+                //获取sinkTable， 指明当前这条数据应该发往何处，如果是维度数据，那么对应的是phoenix中的表名是事实数据，对应的是kafka的topic
+            jsonObject.put("sink",tableProcess.getSinkTable());
+            //如果指定了slinkCloumn ，需要对保留的字段进行过滤处理
+            if(tableProcess.getSinkColumns() != null && tableProcess.getSinkColumns().length() > 0 ){
+                filteCloumn(jsonObject.getJSONObject("data"),tableProcess.getSinkColumns());
+            }
+        }else{
+            System.out.println("No this key " + key + "in mysql");
+        }
+        //根据sinkType,将数据输出到不同的流
+        if(tableProcess != null && tableProcess.getSingType().equals(TableProcess.SINK_TYPE_HBASE)){
+            //如果sinktype = hbase, 说明是hbase,通过测输出流输出
+            context.output(outputTag,jsonObject);
+        } else if(tableProcess != null && tableProcess.getSingType().equals(TableProcess.SINK_TYPE_KAFKA)) {
+            out.collect(jsonObject);
+        }
+
+    }
+    //对data中的数据进行列过滤
+    private void filteCloumn(JSONObject data, String sinkColumns) {
+        //sinkCloumn 表示要保留的列  id,cloumn1,cloumn2
+        final String[] cols = sinkColumns.split(",");
+        //为了判断集合中是否包含某个元素
+        final List<String> columnList = Arrays.asList(cols);
+
+        //获取json对象中封装的一个个键值对，每个键值对封装为entry类型
+        final Set<Map.Entry<String, Object>> entries = data.entrySet();
+        final Iterator<Map.Entry<String, Object>> iterator = entries.iterator();
+
+        for(;iterator.hasNext();){
+            final Map.Entry<String, Object> entry = iterator.next();
+            if(!columnList.contains(entry.getKey())){
+                iterator.remove();
+            }
+        }
 
     }
 

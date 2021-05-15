@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.realtime.app.func.TableProcessFunction;
 import com.atguigu.gmall.realtime.bean.TableProcess;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtils;
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -15,6 +16,7 @@ import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
+import org.apache.hadoop.hdfs.ReadStatistics;
 
 /**
  * @author liugou
@@ -34,6 +36,13 @@ public class BaseDbApp {
         env.getCheckpointConfig().setCheckpointTimeout(60000);
         env.setStateBackend(new FsStateBackend("hdfs://hadoop202:8020/gmall/flink/checkpoint/basedbapp"));
 
+        //todo
+        // 重启策略， 如果说没有开启checkpoint，那么重启策略就是norestart
+        // 如果开启checkpoint,那么重启策略会尝试自动帮你进行重启，重启Intger.maxvalue
+        //如果没有设置ck,切代码中出现异常，则默认不会帮我们重启
+        //如果设置了ck,且代码中出现异常，则默认帮我们重启，重启为Integer.maxvalue
+        //可以通过下面方式开启对应的重启模式，不设置则按上面规则走
+        env.setRestartStrategy(RestartStrategies.noRestart());//设置不重启，表示代码异常就退出任务了
 
         // TODO: 2021/4/17 获取业务ods层数据
         String topic = "ods_base_db_m";
@@ -61,6 +70,11 @@ public class BaseDbApp {
         final SingleOutputStreamOperator<JSONObject> kafkaDs = filterDs.process(new TableProcessFunction(hbaseTag));
         //侧输出流，写到hbase
         final DataStream<JSONObject> hbaseDs = kafkaDs.getSideOutput(hbaseTag);
+
+        kafkaDs.print("事实>>>");
+        hbaseDs.print("维度>>>");
+
+        //hbaseDs.addSink()
 
         env.execute("start..");
 
