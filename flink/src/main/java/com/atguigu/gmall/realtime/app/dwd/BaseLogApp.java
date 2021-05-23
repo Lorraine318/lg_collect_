@@ -28,7 +28,7 @@ import java.util.Date;
  * @author liugou
  * @date 2021/4/4 14:49
  * <p>
- *          获取ods层日志 构建日志数据的dwd层
+ *          获取ods层日志数据， 构建日志数据的dwd层
  */
 public class BaseLogApp {
 

@@ -2,6 +2,7 @@ package com.atguigu.gmall.realtime.app.dwd;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.atguigu.gmall.realtime.app.func.DimSink;
 import com.atguigu.gmall.realtime.app.func.TableProcessFunction;
 import com.atguigu.gmall.realtime.bean.TableProcess;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtils;
@@ -22,7 +23,7 @@ import org.apache.hadoop.hdfs.ReadStatistics;
  * @author liugou
  * @date 2021/4/17 16:16
  *
- *          构建业务数据的DWD层
+ *          获取ods层业务数据，构建业务数据的DWD层
  */
 public class BaseDbApp {
 
@@ -73,9 +74,10 @@ public class BaseDbApp {
 
         kafkaDs.print("事实>>>");
         hbaseDs.print("维度>>>");
-
-        //hbaseDs.addSink()
-
+        // TODO:  sink
+        hbaseDs.addSink(new DimSink());
+        // TODO:  业务事实数据 分向不同主题
+       // kafkaDs.addSink();
         env.execute("start..");
 
     }
