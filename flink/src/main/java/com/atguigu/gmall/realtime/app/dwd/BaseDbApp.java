@@ -7,6 +7,7 @@ import com.atguigu.gmall.realtime.app.func.TableProcessFunction;
 import com.atguigu.gmall.realtime.bean.TableProcess;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtils;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
+import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -15,9 +16,14 @@ import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
+import org.apache.flink.streaming.connectors.kafka.KafkaSerializationSchema;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 import org.apache.hadoop.hdfs.ReadStatistics;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+import javax.annotation.Nullable;
 
 /**
  * @author liugou
@@ -74,8 +80,23 @@ public class BaseDbApp {
 
         kafkaDs.print("事实>>>");
         hbaseDs.print("维度>>>");
-        // TODO:  sink
+        // TODO:  hbase sink
         hbaseDs.addSink(new DimSink());
+        // TODO:  kafka sink
+        //为什么需要自定义序列化：因为要发往不同的topic,每条数据只有收到的时候才能确定topic的存在，那么在序列化创建ProducerRecord的时候就可以传入topic。
+        final FlinkKafkaProducer<JSONObject> kafkaSink = MyKafkaUtils.getKafkaSlinkSchema(new KafkaSerializationSchema<JSONObject>() {
+            @Override
+            public void open(SerializationSchema.InitializationContext context) throws Exception {
+                System.out.println("kafka序列化");
+            }
+            @Override
+            public ProducerRecord<byte[], byte[]> serialize(JSONObject jsonObject, @Nullable Long aLong) {
+                final String sinkTopic = jsonObject.getString("sink_table");
+                final JSONObject data = jsonObject.getJSONObject("data");
+                return new ProducerRecord<>(sinkTopic, data.toString().getBytes());
+            }
+        });
+        kafkaDs.addSink(kafkaSink);
         // TODO:  业务事实数据 分向不同主题
        // kafkaDs.addSink();
         env.execute("start..");
