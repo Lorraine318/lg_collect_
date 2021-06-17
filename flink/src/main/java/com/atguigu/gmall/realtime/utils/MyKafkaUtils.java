@@ -3,7 +3,9 @@ package com.atguigu.gmall.realtime.utils;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
+import org.apache.flink.streaming.connectors.kafka.KafkaSerializationSchema;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 
 import java.util.Properties;
 
@@ -15,6 +17,8 @@ import java.util.Properties;
 public class MyKafkaUtils {
 
     private static String kafkaServer = "hadoop02:9092,hadoop03:9092,hadoop04:9092";
+    private static String DEFAULT_TOPIC = "DEFAULT_DATA";
+
 
     //获取flink kafkaConsumer
     public static FlinkKafkaConsumer<String> getKafkaSource(String topic,String groupid) {
@@ -33,6 +37,12 @@ public class MyKafkaUtils {
            return  new FlinkKafkaProducer<String>(kafkaServer,topic,new SimpleStringSchema());
     }
 
+    public static <T>FlinkKafkaProducer<T> getKafkaSlinkSchema(KafkaSerializationSchema<T> kafkaSerializationSchema){
+        final Properties props = new Properties();
+        props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,kafkaServer);
+        props.setProperty(ProducerConfig.TRANSACTION_TIMEOUT_CONFIG,15*60*1000+"");
+        return  new FlinkKafkaProducer<T>(DEFAULT_TOPIC,kafkaSerializationSchema,props,FlinkKafkaProducer.Semantic.EXACTLY_ONCE);
+    }
 
 
 }

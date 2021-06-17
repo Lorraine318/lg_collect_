@@ -28,7 +28,7 @@ import java.util.Date;
  * @author liugou
  * @date 2021/4/4 14:49
  * <p>
- *          获取ods层日志 构建日志数据的dwd层
+ *          获取ods层日志数据， 构建日志数据的dwd层   分为 ：页面日志，启动日志，曝光日志
  */
 public class BaseLogApp {
 
@@ -153,6 +153,7 @@ public class BaseLogApp {
                     //如果是启动日志，输出到启动侧输出流
                     context.output(startTag, dataStr);
                 } else {
+                    collector.collect(dataStr);
                     //如果不是启动日志
                     final JSONArray displays = jsonObject.getJSONArray("displays");
                     if (displays != null && displays.size() > 0) {
